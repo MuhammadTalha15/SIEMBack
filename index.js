@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { Server } from 'socket.io';
-import { createServer } from 'http';
+import { createServer } from 'https';
 
 const app = express();
 const httpServer = createServer(app);
