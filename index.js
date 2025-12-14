@@ -1,8 +1,18 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
 
 const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+    }
+});
+
 const PORT = 5500;
 
 let logs = [];
@@ -22,16 +32,26 @@ app.post("/siem/log", (req, res) => {
         ...log
     });
 
+    io.emit("new_log", log);
+
     console.log(logs);
     console.log("Log Received\n", log);
-    
-    res.status(200).json({messgae: "Log Received"});
+
+    res.status(200).json({ messgae: "Log Received" });
 })
 
 app.get("/siem/getLogs", (req, res) => {
     res.status(200).json(logs);
 })
 
-app.listen(PORT, () => {
+io.on("connection", (socket) => {
+    console.log("New client connected", socket.id);
+
+    socket.on("disconnect", () => {
+        console.log("Client disconnected", socket.id);
+    });
+})
+
+httpServer.listen(PORT, () => {
     console.log(`App listening on http://localhost:5500`);
 })
