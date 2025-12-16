@@ -1,18 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { Server } from 'socket.io';
-import { createServer } from 'http';
 
 const app = express();
-const httpServer = createServer(app);
-
-const io = new Server(httpServer, {
-    cors: {
-        origin: "*",
-    }
-});
-
 const PORT = 5500;
 
 let logs = [];
@@ -22,36 +12,29 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-    res.send("Hello from the backend!");
+    res.send("Server Running!");
 });
 
+// Receive logs
 app.post("/siem/log", (req, res) => {
     const log = req.body;
 
     logs.push({
-        ...log
+        ...log,
+        timestamp: new Date().toISOString()
     });
 
-    io.emit("new_log", log);
-
-    console.log(logs);
     console.log("Log Received\n", log);
+    console.log("All Logs\n", logs);
 
-    res.status(200).json({ messgae: "Log Received" });
-})
+    res.status(200).json({ message: "Log Received" });
+});
 
+// Get all logs
 app.get("/siem/getLogs", (req, res) => {
     res.status(200).json(logs);
-})
+});
 
-io.on("connection", (socket) => {
-    console.log("New client connected", socket.id);
-
-    socket.on("disconnect", () => {
-        console.log("Client disconnected", socket.id);
-    });
-})
-
-httpServer.listen(PORT, () => {
-    console.log(`App listening on http://localhost:5500`);
-})
+app.listen(PORT, () => {
+    console.log(`App listening on http://localhost:${PORT}`);
+});
